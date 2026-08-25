@@ -20,3 +20,33 @@ splitter = CharacterTextSplitter.from_huggingface_tokenizer(
 fragmentos = splitter.split_documents(pdfs)
 
 embeddings = OllamaEmbeddings(model='bge-m3:367m')
+
+vector_store = FAISS.from_documents(documents=fragmentos, embedding=embeddings)
+
+### Configurando el ChatPromptTemplate y el Retriever
+from langchain_core.output_parsers import StrOutputParser
+from langchain_core.prompts import ChatPromptTemplate
+
+prompt = ChatPromptTemplate(
+    [("system", "Responde usando exclusivamente el contenido que se incluye a continuación. Genera una "),
+     ("human", "{query}")]
+)
+
+retriever = vector_store.as_retriever()
+modelo = OllamaLLM(model = "gemma3:4b")
+cadena = prompt | modelo | StrOutputParser()
+
+### Ejecutando consultas y solucionando errores
+
+pregunta = 'Cómo solicitar el seguro de viaje?'
+modelo.invoke(pregunta)
+# python rag.py
+
+# ollama pull
+# ollama pull bge-m3:367m
+# ollama pull bge-m3
+# python rag.py
+# Instalando paquetes necesarios y revisando resultados
+
+# pip install faiss-cpu
+# pip install -q langchain-community faiss-cpu
